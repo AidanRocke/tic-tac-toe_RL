@@ -21,6 +21,9 @@ class game_evaluation:
         self.reward = self.reward()
 
     def scores(self,matrix):
+        """
+            On an NxN board there are only 2*(N+1) ways of winning.
+        """
         
         scores = np.zeros(8)
         
@@ -52,7 +55,10 @@ class game_evaluation:
             return 0
     
     def reward(self):
-        ## risk aversion:
+        """
+         We use a risk-averse heuristic for calculating the reward. 
+        """
+        
         if np.min(self.score) <= -2.0:
         
             return np.min(self.score)
@@ -62,7 +68,6 @@ class game_evaluation:
             return np.max(self.score)
         
         else:
-            
             return np.mean(self.score[np.nonzero(self.score)])
             
     
