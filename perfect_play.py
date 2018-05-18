@@ -9,14 +9,11 @@ Created on Thu May 17 18:33:13 2018
 import numpy as np
 from evaluation import game_evaluation
 
-Q = np.array([[1,-1,-1],[-1,1,1],[0,1,-1]])
-
-## define multi-dimensional array:
-
 class perfect_play:
     
-    def __init__(self,initial_matrix,max_depth):
+    def __init__(self,initial_matrix,max_depth,gamma):
         self.initial = initial_matrix
+        self.gamma = gamma
         
         ## num_positions*num_select ~ max_breadth
         self.num_positions = 9 - np.sum(np.abs(self.initial))
@@ -28,17 +25,19 @@ class perfect_play:
         self.values = np.zeros(self.num_actions)
         
         self.turn = 1.0
-        self.epsilon = np.finfo(np.float32).eps
         
     def update_turn(self):
         
         self.turn *= -1.0
         
-    def evaluation(self,matrix):
+    def reward(self,matrix):
     
         game_state = game_evaluation(matrix)
+        
+        value = game_state.reward*(game_state.X_score == 0.0) + \
+                100*game_state.X_score*(game_state.X_score != 0.0)
             
-        return game_state.reward
+        return value
 
     def matrix_generation(self,matrix):
             
@@ -60,12 +59,12 @@ class perfect_play:
         rewards = np.zeros(N)
                 
         for i in range(N):
-            rewards[i] = self.evaluation(matrices[i])
+            rewards[i] = self.reward(matrices[i])
             
         ## rewards are defined with respect to player/opponent:
-        rewards = self.turn*rewards
+        #rewards = self.turn*rewards
             
-        return matrices[np.argsort(rewards*-1.0)][:self.num_positions], self.turn*np.max(rewards)
+        return matrices[np.argsort(-1.0*rewards)][:self.num_positions], self.turn*np.max(-1.0*rewards)
         
     def simulation(self):
 
@@ -76,8 +75,8 @@ class perfect_play:
                         
             for j in range(self.num_actions):
                                 
-                ## update value of each position
-                self.values[j] = self.evaluation(matrices[j]) ## I should halt as soon as abs(R) is maximal
+                ## update value of each action
+                #self.values[j] = self.gamma*self.values[j] + self.reward(matrices[j]) 
                 
                 ## opponent's turn(min phase):
                 self.update_turn()
@@ -88,7 +87,10 @@ class perfect_play:
                 ## adversarial generation and selection:
                 selection, R = self.matrix_selection(self.matrix_generation(matrices[j]))
                 
-                if abs(R) == 3.0:
+                ## update value of each action
+                self.values[j] = self.gamma*self.values[j] + self.reward(selection[0]) 
+                
+                if abs(R) >= 50.0:
                     break
                 
                 ## player's turn to select(max phase):

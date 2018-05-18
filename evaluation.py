@@ -50,16 +50,16 @@ class game_evaluation:
         
         else:
             return 0
-        
-    def reward(self):
     
-        if np.max(self.score) >= 2.0:
-            
-            return np.max(self.score)
-        
-        elif np.min(self.score) <= -2.0:
+    def reward(self):
+        ## risk aversion:
+        if np.min(self.score) <= -2.0:
         
             return np.min(self.score)
+    
+        elif np.max(self.score) >= 2.0:
+        
+            return np.max(self.score)
         
         else:
             
