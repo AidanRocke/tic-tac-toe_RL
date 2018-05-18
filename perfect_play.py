@@ -15,13 +15,12 @@ Q = np.array([[1,-1,-1],[-1,1,1],[0,1,-1]])
 
 class perfect_play:
     
-    def __init__(self,initial_matrix,max_depth,max_breadth):
+    def __init__(self,initial_matrix,max_depth):
         self.initial = initial_matrix
-        self.max_breadth = np.max([100,max_breadth])
         
         ## num_positions*num_select ~ max_breadth
         self.num_positions = 9 - np.sum(np.abs(self.initial))
-        self.max_depth = int(np.min([max_depth,self.num_positions]))
+        self.max_depth = int(np.min([max_depth,int(self.num_positions/2)]))
 
         self.num_actions = int(9 - np.sum(np.abs(self.initial)))
                 
@@ -102,3 +101,14 @@ class perfect_play:
         
             ## update depth:
             self.max_depth = int(9 - np.sum(np.abs(matrices[0])))
+            
+    def move(self):
+        
+        positions = np.where(self.initial.flatten() == 0.0)[0]
+        
+        self.simulation()
+        
+        delta = np.zeros(9)
+        delta[positions[np.argmax(self.values)]] = 1.0
+            
+        return delta.reshape((3,3))

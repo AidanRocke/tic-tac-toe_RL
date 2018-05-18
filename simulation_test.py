@@ -9,25 +9,31 @@ Created on Fri May 18 08:21:34 2018
 import numpy as np
 from perfect_play import perfect_play
 
-Q = np.array([[1,-1,-1],[-1,1,1],[0,1,-1]])
+np.random.seed(0)
 
-P = perfect_play(Q,5,10)
+Q1 = np.array([[-1,0,0],[0,1,0],[0,0,0]])
 
-P.simulation()
+## first move
+P = perfect_play(Q1,5)
 
-P.values
+P.move()
+
+## second move:
+Q2 = np.array([[-1,-1,0],[0,1,0],[0,0,1]])
+
+P = perfect_play(Q2,5)
+
+P.move()
+
+## third move:
+Q3 = np.array([[-1,-1,1],[0,1,-1],[0,0,1]])
+
+P = perfect_play(Q3,5)
+
+P.move()
 
 
-## second test:
-np.random.seed(32)
 
-X = np.random.choice([0,-1.0,1.0],(3,3))
-
-P = perfect_play(X,5,10)
-
-## break down of what doesn't work.
-
-matrices = P.matrix_generation(Q)
 
 for i in range(P.max_depth):
             
@@ -60,4 +66,3 @@ for i in range(P.max_depth):
         
     ## update depth:
     P.max_depth = int(9 - np.sum(np.abs(M)))
-
