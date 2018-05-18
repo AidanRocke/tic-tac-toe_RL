@@ -21,10 +21,9 @@ class perfect_play:
         
         ## num_positions*num_select ~ max_breadth
         self.num_positions = 9 - np.sum(np.abs(self.initial))
-        self.num_select = int(self.max_breadth/self.num_positions)
-        self.max_depth = np.min([max_depth,self.num_positions])
+        self.max_depth = int(np.min([max_depth,self.num_positions]))
 
-        self.num_actions = 9 - np.sum(np.abs(self.initial))
+        self.num_actions = int(9 - np.sum(np.abs(self.initial)))
                 
         ## running values for each action:
         self.values = np.zeros(self.num_actions)
@@ -67,7 +66,7 @@ class perfect_play:
         ## rewards are defined with respect to player/opponent:
         rewards = self.turn*rewards
             
-        return matrices[np.argsort(rewards)][:self.num_select], self.turn*np.max(rewards)
+        return matrices[np.argsort(rewards*-1.0)][:self.num_positions], self.turn*np.max(rewards)
         
     def simulation(self):
 
@@ -75,9 +74,6 @@ class perfect_play:
         matrices = self.matrix_generation(self.initial)
         
         for i in range(self.max_depth):
-            
-            ## after each iteration we have fewer options:
-            self.num_select -= 1
                         
             for j in range(self.num_actions):
                                 
@@ -86,7 +82,6 @@ class perfect_play:
                 
                 ## opponent's turn(min phase):
                 self.update_turn()
-                self.num_select -= 1
                 
                 if self.num_actions <= 1:
                     break
@@ -94,11 +89,16 @@ class perfect_play:
                 ## adversarial generation and selection:
                 selection, R = self.matrix_selection(self.matrix_generation(matrices[j]))
                 
+                if abs(R) == 3.0:
+                    break
+                
                 ## player's turn to select(max phase):
                 self.update_turn()
-                self.num_select -= 1
                 
                 ## favorable generation and selection:
                 M, R = self.matrix_selection(self.matrix_generation(selection[0]))
                 
                 matrices[j] = M[0]
+        
+            ## update depth:
+            self.max_depth = int(9 - np.sum(np.abs(matrices[0])))
