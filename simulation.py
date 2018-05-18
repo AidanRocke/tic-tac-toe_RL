@@ -10,10 +10,10 @@ import numpy as np
 from evaluation import game_evaluation
 from perfect_play import perfect_play
 
-num_games = 10
+num_games = 100
 
 
-def game_simulation(num_games):
+def game_simulation(num_games,random_start):
 
     outcomes = np.zeros(num_games)
     
@@ -27,7 +27,16 @@ def game_simulation(num_games):
         Z = np.zeros((3,3))
         X, O = np.random.choice(np.arange(9),2,replace=False)
         Z[int(X/3)][X % 3] = 1.0
-        Z[int(O/3)][O % 3] = -1.0
+        
+        if random_start == 1.0:
+            ## the second player plays randomly:
+            Z[int(O/3)][O % 3] = -1.0
+            
+        else:
+            ## the second player doesn't play randomly:
+            P = perfect_play(-1.0*Z,5,0.5)
+            Z += -1.0*P.move()
+        
         
         initial.append(np.copy(Z))
     
