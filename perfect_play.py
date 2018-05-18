@@ -13,19 +13,17 @@ Q = np.array([[1,-1,-1],[-1,1,1],[0,1,-1]])
 
 ## define multi-dimensional array:
 
-n = 100
-X = np.zeros((n,3,3))
-
 class perfect_play:
     
     def __init__(self,initial_matrix,max_depth,max_breadth):
         self.initial = initial_matrix
-        self.max_depth = np.min([max_depth,self.num_select])
         self.max_breadth = np.max([100,max_breadth])
         
         ## num_positions*num_select ~ max_breadth
         self.num_positions = 9 - np.sum(np.abs(self.initial))
         self.num_select = int(self.max_breadth/self.num_positions)
+        self.max_depth = np.min([max_depth,self.num_positions])
+
         self.num_actions = 9 - np.sum(np.abs(self.initial))
                 
         ## running values for each action:
@@ -36,9 +34,9 @@ class perfect_play:
         
     def update_turn(self):
         
-        self.turn = 1.0*self.turn + -1.0*(1.0-self.turn)
+        self.turn *= -1.0
         
-    def evaluation(matrix):
+    def evaluation(self,matrix):
     
         game_state = game_evaluation(matrix)
             
@@ -76,21 +74,22 @@ class perfect_play:
         ## player generates possible positions for each atomic action:
         matrices = self.matrix_generation(self.initial)
         
-        for i in range(1,self.max_depth):
+        for i in range(self.max_depth):
             
             ## after each iteration we have fewer options:
             self.num_select -= 1
                         
             for j in range(self.num_actions):
-                
-                ## evaluation phase:
-                
+                                
                 ## update value of each position
                 self.values[j] = self.evaluation(matrices[j]) ## I should halt as soon as abs(R) is maximal
                 
                 ## opponent's turn(min phase):
                 self.update_turn()
                 self.num_select -= 1
+                
+                if self.num_actions <= 1:
+                    break
                 
                 ## adversarial generation and selection:
                 selection, R = self.matrix_selection(self.matrix_generation(matrices[j]))
