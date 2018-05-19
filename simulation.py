@@ -13,7 +13,7 @@ from perfect_play import perfect_play
 num_games = 100
 
 
-def game_simulation(num_games,random_start):
+def game_simulation(num_games,random_start,depth,gamma):
 
     outcomes = np.zeros(num_games)
     
@@ -34,7 +34,7 @@ def game_simulation(num_games,random_start):
             
         else:
             ## the second player doesn't play randomly:
-            P = perfect_play(-1.0*Z,5,0.5)
+            P = perfect_play(-1.0*Z,depth,gamma)
             Z += -1.0*P.move()
         
         
@@ -43,7 +43,7 @@ def game_simulation(num_games,random_start):
         while game == 1.0:
             
             ## computer A move:
-            P = perfect_play(Z,5,0.5)
+            P = perfect_play(Z,depth,gamma)
         
             Z += P.move()
             
@@ -56,7 +56,7 @@ def game_simulation(num_games,random_start):
                 break
                 
             ## computer B move:
-            P = perfect_play(-1.0*Z,5,0.5)
+            P = perfect_play(-1.0*Z,depth,gamma)
             
             Z += -1.0*P.move()
             
