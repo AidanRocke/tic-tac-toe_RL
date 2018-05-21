@@ -16,7 +16,6 @@ random_start = 0.0
 depth = 5
 gamma = 0.5
 
-
 def game_simulation(num_games,random_start,depth,gamma):
 
     outcomes = np.zeros(num_games)

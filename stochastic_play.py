@@ -15,6 +15,7 @@ class stochastic_play:
         self.initial = initial_matrix
         self.gamma = gamma
         self.R = np.array([[0,0,1],[0,1,0],[1,0,0]])
+        self.state = 0.0
         
         ## num_positions*num_select ~ max_breadth
         self.num_positions = int(9 - np.sum(np.abs(self.initial)))
@@ -67,57 +68,54 @@ class stochastic_play:
                     
         return matrices
     
-    def matrix_evolution(self,batch,batch_indices):
-            
-            ix, B = [], []
-            
-            N = len(batch_indices)
-            
-            mu_batch  = np.median([self.turn*self.reward(batch[i]) for i in range(N)])
-            
-            rewards = np.zeros(self.num_actions)
-            
-            ## sort values:
-            order = self.values.argsort()
-            ranks = order.argsort()
+    def matrix_selection(self,matrices):
+        
+        N = len(matrices)
+        rewards = np.zeros(N)
+                
+        for i in range(N):
+            rewards[i] = self.reward(matrices[i])
+    
+        return matrices[np.argsort(-1.0*rewards)][:self.num_positions], self.turn*np.max(-1.0*rewards)
 
+    def matrix_evolution(self,batch,batch_indices):
+                
+        ix, B = [], []
+                    
+        N = len(batch_indices)
+        
+        batch_values = np.array([self.turn*self.reward(batch[i]) for i in range(N)])
+        mu_batch  = np.mean(batch_values)
+    
+        sub_index = np.where(batch_values > mu_batch)[0]
+    
+        rewards, counts = np.zeros(self.num_actions), np.zeros(self.num_actions)
+        
+        if len(sub_index) > 2:
+    
+            for i in sub_index:
+                    M, R = self.matrix_selection(self.matrix_generation(batch[i]))
+                                
+                    ## calculate index:
+                    j = int(batch_indices[i])
+                
+                    ## choose the top 3:
+                    B.extend(M[:3])
+                    ix += [j]*len(M[:3])
+                        
+                    ## update rewards using running average:
+                    rewards[j] = rewards[j]*(counts[j]/(counts[j]+1))+(self.turn*R)/(counts[j]+1)
+                    counts[j] += 1
+                        
+        ## update the value of each action:
+        for k in range(self.num_actions):
+            self.values[k] = self.gamma*self.values[k] + rewards[k]
             
-            for i in range(self.num_actions): 
-                
-                #prob = np.max([(self.values[i]*(self.values[i]*self.turn > 0))/(np.sum(self.values*(self.values*self.turn > 0))+1e-20),0.5])
-                #prob = np.max([(np.exp(self.values[i]))/(np.sum(np.exp(self.values))+1e-20),0.5])
-                prob = np.max([ranks[i]/self.num_actions,0.2])
-                
-                ## running average reward counter:
-                count = 0
-                
-                indices = np.where(batch_indices==i)[0]
-                
-                if len(indices) > 10 and len(ix) < 150:
-                
-                    for k in np.random.choice(indices,int(len(indices)*prob[i]),replace=False):
-                        ## adversarial matrix generation:
-                        M = self.matrix_generation(batch[i])
-                                                
-                        for m in M:
-                            
-                            if self.turn*self.reward(m) > mu_batch or np.random.rand() > 0.1:
-                                
-                                B.append(m)
-                                ix.append(i)
-                                
-                                ## update rewards using running average:
-                                rewards[i] = rewards[i]*(count/(count+1))+ \
-                                            (self.turn*self.reward(m))/(count+1)
-                                
-            ## update the value of each action:
-            for i in range(self.num_actions):
-                self.values[i] = self.gamma*self.values[i] + rewards[i]
-                
-                if abs(rewards[i]) >= 50.0: ## halt the game if the player has won/lost/drawn. 
-                    break
-                            
-            return np.array(B), np.array(ix)
+            if abs(rewards[k]) >= 50.0: ## halt the game if the player has won/lost/drawn. 
+                self.state = 1.0
+                break
+    
+        return np.array(B), np.array(ix)
                             
     def simulation(self):
         
@@ -131,17 +129,17 @@ class stochastic_play:
         batch_indices = np.array([np.ones(batch_shape[1])*i for i in range(batch_shape[0])]).flatten()
         
         batch = batch.reshape((batch_shape[0]*batch_shape[1],3,3))
-        
+                
         while self.max_depth >= 1:
             
-            if len(batch_indices) <= 1:
+            if len(batch_indices) <= 1 or self.state == 1.0:
                 break
             
             ## switch turn for min_phase:
             self.update_turn()
             batch, batch_indices = self.matrix_evolution(batch,batch_indices)
-            
-            if len(batch_indices) <= 1:
+                        
+            if len(batch_indices) <= 1 or self.state == 1.0:
                 break
             
             ## switch turn for max phase:
