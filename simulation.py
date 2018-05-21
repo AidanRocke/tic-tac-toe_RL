@@ -50,9 +50,8 @@ def game_simulation(num_games,random_start,depth,gamma):
         
             Z += P1.move()
             
-            if np.max(np.abs(P1.scores(Z))) == 3.0 or np.sum(np.abs(Z)) == 9.0:
-                game_eval = game_evaluation(Z)
-                outcomes[i] = game_eval.X_score
+            if abs(P1.reward(Z)) >= 50.0:
+                outcomes[i] = P1.reward(Z)/100.0
                 
                 game = 0.0
                 

@@ -28,19 +28,6 @@ class stochastic_play:
         
         self.turn = 1.0
         
-    def scores(self,matrix):
-        """
-            On an NxN board there are only 2*(N+1) ways of winning.
-        """
-        scores = np.zeros(8)
-        
-        scores[:3] = np.sum(matrix,0) ## rows
-        scores[3:6] = np.sum(matrix,1) ## columns
-        scores[6] = np.trace(matrix) ## first diagonal
-        scores[7] = np.trace(np.matmul(self.R,matrix)) ## second diagonal
-        
-        return scores
-        
     def update_turn(self):
         
         self.turn *= -1.0
@@ -76,7 +63,7 @@ class stochastic_play:
         for i in range(N):
             rewards[i] = self.reward(matrices[i])
     
-        return matrices[np.argsort(-1.0*rewards)][:self.num_positions], self.turn*np.max(-1.0*rewards)
+        return matrices[np.argsort(-1.0*rewards)][:self.num_positions], self.turn*np.max(self.turn*rewards)
 
     def matrix_evolution(self,batch,batch_indices):
                 
@@ -104,7 +91,7 @@ class stochastic_play:
                     ix += [j]*len(M[:3])
                         
                     ## update rewards using running average:
-                    rewards[j] = rewards[j]*(counts[j]/(counts[j]+1))+(self.turn*R)/(counts[j]+1)
+                    rewards[j] = rewards[j]*(counts[j]/(counts[j]+1))+R/(counts[j]+1)
                     counts[j] += 1
                         
         ## update the value of each action:
