@@ -8,9 +8,13 @@ Created on Fri May 18 17:35:57 2018
 
 import numpy as np
 from evaluation import game_evaluation
-from perfect_play import perfect_play
+from simple_play import simple_play
+from stochastic_play import stochastic_play
 
-num_games = 100
+num_games = 10
+random_start = 0.0
+depth = 5
+gamma = 0.5
 
 
 def game_simulation(num_games,random_start,depth,gamma):
@@ -34,8 +38,8 @@ def game_simulation(num_games,random_start,depth,gamma):
             
         else:
             ## the second player doesn't play randomly:
-            P = perfect_play(-1.0*Z,depth,gamma)
-            Z += -1.0*P.move()
+            P2 = simple_play(-1.0*Z,depth,gamma)
+            Z += -1.0*P2.move()
         
         
         initial.append(np.copy(Z))
@@ -43,11 +47,11 @@ def game_simulation(num_games,random_start,depth,gamma):
         while game == 1.0:
             
             ## computer A move:
-            P = perfect_play(Z,depth,gamma)
+            P1 = stochastic_play(Z,depth,gamma)
         
-            Z += P.move()
+            Z += P1.move()
             
-            if np.sum(np.abs(Z)) >= 9.0:
+            if np.max(np.abs(P1.scores(Z))) == 3.0 or np.sum(np.abs(Z)) == 9.0:
                 game_eval = game_evaluation(Z)
                 outcomes[i] = game_eval.X_score
                 
@@ -56,9 +60,9 @@ def game_simulation(num_games,random_start,depth,gamma):
                 break
                 
             ## computer B move:
-            P = perfect_play(-1.0*Z,depth,gamma)
+            P2 = simple_play(-1.0*Z,depth,gamma)
             
-            Z += -1.0*P.move()
+            Z += -1.0*P2.move()
             
     return initial, outcomes
         

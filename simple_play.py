@@ -9,7 +9,7 @@ Created on Thu May 17 18:33:13 2018
 import numpy as np
 from evaluation import game_evaluation
 
-class perfect_play:
+class simple_play:
     
     def __init__(self,initial_matrix,max_depth,gamma):
         self.initial = initial_matrix
@@ -61,6 +61,9 @@ class perfect_play:
         for i in range(N):
             rewards[i] = self.reward(matrices[i])
             
+        #return matrices[np.argsort(self.turn*rewards)][:self.num_positions], self.turn*np.max(self.turn*rewards)
+        #return matrices[np.argsort(rewards)][:self.num_positions], np.max(rewards)
+    
         return matrices[np.argsort(-1.0*rewards)][:self.num_positions], self.turn*np.max(-1.0*rewards)
         
     def simulation(self):

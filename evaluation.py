@@ -61,11 +61,11 @@ class game_evaluation:
         
         if np.min(self.score) <= -2.0:
         
-            return np.min(self.score)
+            return np.min(self.score)*5
     
         elif np.max(self.score) >= 2.0:
         
-            return np.max(self.score)
+            return np.max(self.score)*5
         
         else:
             return np.mean(self.score[np.nonzero(self.score)])
