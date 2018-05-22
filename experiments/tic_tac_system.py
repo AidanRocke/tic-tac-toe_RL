@@ -71,8 +71,10 @@ class tic_tac_system:
                 
                 self.Z += action.reshape((3,3))
                 
-                print(sess.run(self.model.dist.sample(), feed_dict={self.model.state:self.Z.flatten().reshape((1,9))}))
-                
+                #print(self.Z)
+                #print(sess.run(self.model.dist.log_prob(self.model.dist.sample()), feed_dict={self.model.state:self.Z.flatten().reshape((1,9))}))
+                print(sess.run(self.model.policy, feed_dict={self.model.state:self.Z.flatten().reshape((1,9))}))
+
                 ## update rollout:
                 rollouts[i][count] = np.concatenate((self.Z.flatten(),action.reshape((9,))))
                 count += 1
@@ -130,11 +132,13 @@ class tic_tac_system:
             
                 train_feed = {self.model.state_action : state_action,self.model.state:state \
                               ,self.model.reward: R}
+                
+                sess.run(self.model.accum_ops,feed_dict = train_feed)
             
             #train_feed = {self.model.state_action : np.zeros((1,18)),self.model.state: np.zeros((1,9)) \
             #              ,self.model.reward: np.zeros((1,1))} 
             
-            sess.run(self.model.accum_ops,feed_dict = train_feed)
+                
                     
         sess.run(self.model.train_step)
             

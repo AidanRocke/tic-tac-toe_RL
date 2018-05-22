@@ -100,7 +100,7 @@ class policy_gradients:
                 
             h = tf.nn.elu(tf.add(tf.matmul(self.state_action, w_h),bias_1))
             
-        return tf.nn.sigmoid(tf.add(tf.matmul(h, w_o),bias_2))
+        return tf.nn.elu(tf.add(tf.matmul(h, w_o),bias_2))
     
     def multinomial(self):
         
