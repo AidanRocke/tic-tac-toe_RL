@@ -21,7 +21,7 @@ class stochastic_play:
         ## num_positions*num_select ~ max_breadth
         self.num_positions = int(9 - np.sum(np.abs(self.initial)))
         self.max_depth = int(np.min([max_depth,int(self.num_positions/2)]))
-        self.max_reward = 0.0
+        self.max_reward, self.iter = 0.0, 0
 
         self.num_actions = int(9 - np.sum(np.abs(self.initial)))
                 
@@ -107,8 +107,9 @@ class stochastic_play:
             
             if np.max(rewards) >= self.max_reward:
                 self.max_reward = np.max(rewards)
+                self.iter += 1
                 
-            elif np.random.rand() < 0.9:
+            elif self.iter >= 3:
                 self.state = 1.0
                 break
     
