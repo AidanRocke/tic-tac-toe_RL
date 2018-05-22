@@ -67,7 +67,7 @@ class game_evaluation:
         
             return np.max(self.score)*5
         
-        else:
+        else:            
             return np.mean(self.score[np.nonzero(self.score)])
             
     

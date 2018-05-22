@@ -1,27 +1,22 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri May 18 17:35:57 2018
-
-@author: aidanrocke
-"""
+## load everything:
 
 import numpy as np
-from evaluation import game_evaluation
 from simple_play import simple_play
 from stochastic_play import stochastic_play
 
-num_games = 10
-random_start = 0.0
-depth = 5
-gamma = 0.5
+### there are four possible permutations where player A moves first
+### and so we'll use a 2-d boolean vector(ex. [0,1]) to denote the
+### combination of interest:
+## 1. simple(player A) vs simple(player B)
+## 2. stochastic(player A) vs stochastic(player B)
+## 3. simple(player A) vs stochastic(player B)
+## 4. stochastic(player A) vs simple(player B)
 
-def game_simulation(num_games,random_start,depth,gamma):
+def game_simulation(player_combo,num_games,random_start,depth,gamma):
 
     outcomes = np.zeros(num_games)
     
-    
-    initial = []
+    initial_conditions = []
     
     for i in range(num_games):
         
@@ -37,33 +32,37 @@ def game_simulation(num_games,random_start,depth,gamma):
             
         else:
             ## the second player doesn't play randomly:
-            P2 = simple_play(-1.0*Z,depth,gamma)
-            Z += -1.0*P2.move()
+            if player_combo[1] == 1.0:
+                P2 = stochastic_play(-1.0*Z,depth,gamma)
+                Z += -1.0*P2.move()
+            else:   
+                P2 = simple_play(-1.0*Z,depth,gamma)
+                Z += -1.0*P2.move()
         
-        
-        initial.append(np.copy(Z))
+        initial_conditions.append(np.copy(Z))
     
         while game == 1.0:
+            ## player A move:
+            if player_combo[0] == 1.0:
+                P1 = stochastic_play(Z,depth,gamma)
+                Z += P1.move()
+            else:  
+                P1 = simple_play(Z,depth,gamma)
+                Z += P1.move()
             
-            ## computer A move:
-            P1 = stochastic_play(Z,depth,gamma)
-        
-            Z += P1.move()
-            
-            if abs(P1.reward(Z)) >= 50.0:
-                outcomes[i] = P1.reward(Z)/100.0
+            if P1.score(Z)[1] != 0.0:
+                outcomes[i] = P1.score(Z)[1]
                 
                 game = 0.0
                 
                 break
-                
-            ## computer B move:
-            P2 = simple_play(-1.0*Z,depth,gamma)
             
-            Z += -1.0*P2.move()
+            ## player B move:
+            if player_combo[1] == 1.0:
+                P2 = stochastic_play(-1.0*Z,depth,gamma)
+                Z += -1.0*P2.move()
+            else:   
+                P2 = simple_play(-1.0*Z,depth,gamma)
+                Z += -1.0*P2.move()
             
-    return initial, outcomes
-        
-
-    
-    
+    return initial_conditions, outcomes

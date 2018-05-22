@@ -14,6 +14,7 @@ class simple_play:
     def __init__(self,initial_matrix,max_depth,gamma):
         self.initial = initial_matrix
         self.gamma = gamma
+        self.reward_constant = 50/(self.gamma**5)
         
         ## num_positions*num_select ~ max_breadth
         self.num_positions = int(9 - np.sum(np.abs(self.initial)))
@@ -30,12 +31,17 @@ class simple_play:
         
         self.turn *= -1.0
         
-    def reward(self,matrix):
-    
+    def score(self,matrix):
+        
         game_state = game_evaluation(matrix)
         
-        value = game_state.reward*(game_state.X_score == 0.0) + \
-                100*game_state.X_score*(game_state.X_score != 0.0)
+        return game_state.reward, game_state.X_score*(game_state.X_score != 0.0)
+        
+    def reward(self,matrix):
+    
+        R , score = self.score(matrix)
+        
+        value = R*(score == 0.0) + self.reward_constant*score*(score != 0.0)
             
         return value
 
