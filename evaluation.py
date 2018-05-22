@@ -10,21 +10,13 @@ import numpy as np
 
 class game_evaluation:
     
-    def __init__(self,matrix):
-        self.matrix = matrix
+    def __init__(self):
         self.R = np.array([[0,0,1],[0,1,0],[1,0,0]]) ## reflection about y=x
-
-        self.score = self.scores(matrix)
-        self.draw = self.draw()
-        self.X_score = self.X_score()+0.5*self.draw
-        self.O_score = -1.0*self.X_score+0.5*self.draw
-        self.reward = self.reward()
 
     def scores(self,matrix):
         """
             On an NxN board there are only 2*(N+1) ways of winning.
         """
-        
         scores = np.zeros(8)
         
         scores[:3] = np.sum(matrix,0) ## rows
@@ -34,41 +26,45 @@ class game_evaluation:
         
         return scores
     
-    def X_score(self):
+    def X_score(self,matrix):
         
-        if np.max(self.score) == 3:
-            return 1.0
+        scores, draw = self.scores(matrix), self.draw(matrix)
         
-        elif np.min(self.score) == -3.0:
-            return -1.0
+        if np.max(scores) == 3:
+            return 1.0 + draw
+        
+        elif np.min(scores) == -3.0:
+            return -1.0 + draw
         
         else:
-            return 0.0
+            return 0.0 + draw
         
-    def draw(self):
-                
-        if np.min(self.scores(np.abs(self.matrix))) >= 2.0:
+    def draw(self,matrix):
+                        
+        if np.min(self.scores(np.abs(matrix))) >= 2.0:
             
-            return np.max(np.abs(self.score)) <= 1.0
+            return np.max(np.abs(self.scores(matrix))) <= 1.0
         
         else:
             return 0
     
-    def reward(self):
+    def reward(self,matrix):
         """
          We use a risk-averse heuristic for calculating the reward. 
         """
         
-        if np.min(self.score) <= -2.0:
+        scores = self.scores(matrix)
         
-            return np.min(self.score)*5
+        if np.min(scores) <= -2.0:
+        
+            return np.min(scores)*5
     
-        elif np.max(self.score) >= 2.0:
+        elif np.max(scores) >= 2.0:
         
-            return np.max(self.score)*5
+            return np.max(scores)*5
         
         else:            
-            return np.mean(self.score[np.nonzero(self.score)])
+            return np.mean(scores[np.nonzero(scores)])
             
     
     

@@ -2,7 +2,10 @@
 
 import numpy as np
 from simple_play import simple_play
-from stochastic_play import stochastic_play
+from clever_stochastician import clever_stochastician as CS
+from evaluation import game_evaluation as G
+
+G = G()
 
 ### there are four possible permutations where player A moves first
 ### and so we'll use a 2-d boolean vector(ex. [0,1]) to denote the
@@ -33,10 +36,10 @@ def game_simulation(player_combo,num_games,random_start,depth,gamma):
         else:
             ## the second player doesn't play randomly:
             if player_combo[1] == 1.0:
-                P2 = stochastic_play(-1.0*Z,depth,gamma)
+                P2 = CS(G,-1.0*Z,depth,gamma)
                 Z += -1.0*P2.move()
             else:   
-                P2 = simple_play(-1.0*Z,depth,gamma)
+                P2 = simple_play(G,-1.0*Z,depth,gamma)
                 Z += -1.0*P2.move()
         
         initial_conditions.append(np.copy(Z))

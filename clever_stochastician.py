@@ -7,11 +7,14 @@ Created on Tue May 22 12:48:19 2018
 """
 
 import numpy as np
-from evaluation import game_evaluation
+from evaluation import game_evaluation as G
+
+G = G()
 
 class clever_stochastician:
     
-    def __init__(self,initial_matrix,max_depth,gamma):
+    def __init__(self,G,initial_matrix,max_depth,gamma):
+        self.G = G
         self.initial = initial_matrix
         self.gamma = gamma
         self.R = np.array([[0,0,1],[0,1,0],[1,0,0]])
@@ -34,17 +37,10 @@ class clever_stochastician:
         
         self.turn *= -1.0
         
-    def softmax(self,x):
-        """Compute softmax values for each sets of scores in x."""
-        e_x = np.exp(x - np.max(x))
-        
-        return e_x / e_x.sum()
         
     def score(self,matrix):
         
-        game_state = game_evaluation(matrix)
-        
-        return game_state.reward, game_state.X_score*(game_state.X_score != 0.0)
+        return self.G.reward(matrix), self.G.X_score(matrix)*(self.G.X_score(matrix) != 0.0)
         
     def reward(self,matrix):
     
