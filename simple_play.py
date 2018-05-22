@@ -14,7 +14,8 @@ class simple_play:
     def __init__(self,initial_matrix,max_depth,gamma):
         self.initial = initial_matrix
         self.gamma = gamma
-        self.reward_constant = 50/(self.gamma**5)
+        self.reward_constant = 1e2
+        self.turn = 1.0
         
         ## num_positions*num_select ~ max_breadth
         self.num_positions = int(9 - np.sum(np.abs(self.initial)))
@@ -24,8 +25,6 @@ class simple_play:
                 
         ## running values for each action:
         self.values = np.zeros(self.num_actions)
-        
-        self.turn = 1.0
         
     def update_turn(self):
         
