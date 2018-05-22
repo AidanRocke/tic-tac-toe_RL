@@ -16,7 +16,7 @@ class stochastic_play:
         self.gamma = gamma
         self.R = np.array([[0,0,1],[0,1,0],[1,0,0]])
         self.state = 0.0
-        self.reward_constant = 50/(self.gamma**5)
+        self.reward_constant = 1e10
         
         ## num_positions*num_select ~ max_breadth
         self.num_positions = int(9 - np.sum(np.abs(self.initial)))
@@ -33,6 +33,12 @@ class stochastic_play:
     def update_turn(self):
         
         self.turn *= -1.0
+        
+    def softmax(self,x):
+        """Compute softmax values for each sets of scores in x."""
+        e_x = np.exp(x - np.max(x))
+        
+        return e_x / e_x.sum()
         
     def score(self,matrix):
         
@@ -109,7 +115,7 @@ class stochastic_play:
                 self.max_reward = np.max(rewards)
                 self.iter += 1
                 
-            elif self.iter >= 3:
+            elif self.iter > 2:
                 self.state = 1.0
                 break
     
