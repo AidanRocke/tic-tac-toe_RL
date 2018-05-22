@@ -9,7 +9,7 @@ Created on Tue May 22 12:48:19 2018
 import numpy as np
 from evaluation import game_evaluation
 
-class stochastic_play:
+class clever_stochastician:
     
     def __init__(self,initial_matrix,max_depth,gamma):
         self.initial = initial_matrix

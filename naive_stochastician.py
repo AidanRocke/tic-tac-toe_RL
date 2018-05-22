@@ -9,7 +9,7 @@ Created on Sun May 20 14:15:02 2018
 import numpy as np
 from evaluation import game_evaluation
 
-class stochastic_play:
+class naive_stochastician:
     
     def __init__(self,initial_matrix,max_depth,gamma):
         self.turn = 1.0
