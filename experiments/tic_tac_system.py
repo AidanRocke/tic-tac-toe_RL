@@ -73,7 +73,7 @@ class tic_tac_system:
                 
                 #print(self.Z)
                 #print(sess.run(self.model.dist.log_prob(self.model.dist.sample()), feed_dict={self.model.state:self.Z.flatten().reshape((1,9))}))
-                print(sess.run(self.model.policy, feed_dict={self.model.state:self.Z.flatten().reshape((1,9))}))
+                #print(sess.run(self.model.policy, feed_dict={self.model.state:self.Z.flatten().reshape((1,9))}))
 
                 ## update rollout:
                 rollouts[i][count] = np.concatenate((self.Z.flatten(),action.reshape((9,))))
@@ -88,6 +88,7 @@ class tic_tac_system:
                     ## update the average score:
                     mu_score = mu_score*(N/(N+1))+q/(N+1)
                     N += 1
+                    break
                 
                 ## add the consequence of the opponent's move:
                 player_2 = self.opponent(self.G,-1.0*self.Z,self.depth,self.gamma)
@@ -103,6 +104,7 @@ class tic_tac_system:
                     ## update the average score:
                     mu_score = mu_score*(N/(N+1))+q/(N+1)
                     N += 1
+                    break
                     
         ## restart the system:
         self.restart()
@@ -121,23 +123,16 @@ class tic_tac_system:
         sess.run(self.model.zero_ops)
         
         batch, rewards = self.rollouts(sess)
+        
+        print(np.shape(batch))
                     
         for i in range(self.model.batch_size):
             
-            for j in range(9):
-                
-                state_action = batch[i][j].reshape((1,18))
-                state = batch[i][:,:9][j].reshape((1,9))
-                R = rewards[i][j].reshape((1,1))
+            states = batch[i][:,:9]
+        
+            train_feed = {self.model.state_action : batch[i].reshape((9,18)),self.model.state: states,self.model.reward: rewards[i].reshape((9,1))}
             
-                train_feed = {self.model.state_action : state_action,self.model.state:state \
-                              ,self.model.reward: R}
-                
-                sess.run(self.model.accum_ops,feed_dict = train_feed)
-            
-            #train_feed = {self.model.state_action : np.zeros((1,18)),self.model.state: np.zeros((1,9)) \
-            #              ,self.model.reward: np.zeros((1,1))} 
-            
+            sess.run(self.model.accum_ops,feed_dict = train_feed)
                 
                     
         sess.run(self.model.train_step)

@@ -104,15 +104,21 @@ class policy_gradients:
     
     def multinomial(self):
         
-        ## identify the free positions:
+        ## identify the free positions:    
         free_positions = tf.to_float(tf.equal(self.state,tf.zeros((1,9))))
-
-        free_matrix = tf.diag(tf.reshape(free_positions,(9,)))
     
+        fm_mapping = lambda x: tf.diag(tf.reshape(x,(9,)))
+    
+        free_matrices = tf.map_fn(fm_mapping,free_positions)
+
+
         ## calculate probability vector:
-        prob_vec = tf.transpose(tf.matmul(free_matrix,tf.transpose(self.policy)))
-        prob = prob_vec/tf.reduce_sum(prob_vec)
+        pvec_mapping = lambda x: tf.transpose(tf.matmul(x,tf.transpose(self.policy)))
         
+        prob_vec = tf.map_fn(pvec_mapping,free_matrices)
+        prob = prob_vec/(tf.reduce_sum(prob_vec)+tf.constant(1e-5))
+
+    
         return tf.contrib.distributions.Multinomial(total_count=1., probs=prob)
     
     def sample_action(self):

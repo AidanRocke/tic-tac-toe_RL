@@ -28,3 +28,4 @@ def simulator(tic_tac):
     scores = tic_tac.score         
             
     return scores
+
