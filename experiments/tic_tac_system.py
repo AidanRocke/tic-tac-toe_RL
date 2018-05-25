@@ -67,20 +67,21 @@ class tic_tac_system:
                         
             while self.G.X_score(self.Z) == 0.0:
                 
-                action = sess.run(self.model.action,feed_dict={self.model.state:self.Z.flatten().reshape((1,9))})
+                action = sess.run(self.model.sample_action,feed_dict={self.model.state:self.Z.flatten().reshape((1,9))})
+                                
+                policy = sess.run(self.model.policy,feed_dict={self.model.state:self.Z.flatten().reshape((1,9))})
+
+                
+                print(policy)
                 
                 self.Z += action.reshape((3,3))
                 
-                #print(self.Z)
-                #print(sess.run(self.model.dist.log_prob(self.model.dist.sample()), feed_dict={self.model.state:self.Z.flatten().reshape((1,9))}))
-                #print(sess.run(self.model.policy, feed_dict={self.model.state:self.Z.flatten().reshape((1,9))}))
-
                 ## update rollout:
                 rollouts[i][count] = np.concatenate((self.Z.flatten(),action.reshape((9,))))
                 count += 1
                 
                 ## reward check-pointing:
-                q = self.G.X_score(self.Z)*50
+                q = self.G.X_score(self.Z)*5
                 
                 if q != 0.0:
                     rewards[i][:count] = np.geomspace(q,q/np.abs(q), num=count)
@@ -95,7 +96,7 @@ class tic_tac_system:
                 self.Z += -1.0*player_2.move()
                 
                 ## reward check-pointing:
-                q = self.G.X_score(self.Z)*50
+                q = self.G.X_score(self.Z)*5
                 
                 if q != 0.0:
                     ## discount the reward in a geometric manner:
@@ -123,14 +124,16 @@ class tic_tac_system:
         sess.run(self.model.zero_ops)
         
         batch, rewards = self.rollouts(sess)
-        
-        print(rewards[0])
-                    
+                            
         for i in range(self.model.batch_size):
             
             states = batch[i][:,:9]
+            actions = batch[i][:,9:18]
         
-            train_feed = {self.model.state_action : batch[i].reshape((9,18)),self.model.state: states,self.model.reward: rewards[i].reshape((9,1))}
+            train_feed = {self.model.state_action : batch[i].reshape((9,18)),self.model.state: states, \
+                          self.model.action: actions, self.model.reward: rewards[i].reshape((9,1))}
+            
+            #print(sess.run(self.model.gvs,feed_dict = train_feed))
             
             sess.run(self.model.accum_ops,feed_dict = train_feed)
                 

@@ -14,6 +14,7 @@ class policy_gradients:
         self.batch_size = batch_size ## number of rollouts
         
         self.state = tf.placeholder(tf.float32, [None, 9]) ## the board representation
+        self.action = tf.placeholder(tf.float32, [None, 9]) ## the agent's action
         self.state_action = tf.placeholder(tf.float32, [None, 18]) ## (state,action)
         self.reward = tf.placeholder(tf.float32, [None, 1]) ## the time-discounted reward signal
         self.seed = seed ## the random seed
@@ -23,16 +24,17 @@ class policy_gradients:
         
         ## define the probability distribution:
         self.dist = self.multinomial()
+        self.log_prob = self.log_prob()
+        self.sample_action = self.sample_action()
         
         ## define what is necessary for the loss:
-        self.action = self.sample_action()
         self.reinforce_loss = self.reinforce_loss()
         self.value_estimate = self.value_estimator()
         self.baseline = self.baseline() 
         
         #self.average_loss = tf.reduce_mean(self.reinforce_loss)
         
-        self.average_loss = tf.reduce_mean(tf.subtract(self.reinforce_loss,self.baseline)) + \
+        self.average_loss = -1.0*tf.reduce_mean(tf.subtract(self.reinforce_loss,self.baseline)) + \
                             0.5*tf.reduce_mean(tf.square(self.value_estimate-self.reward))
         
         ## collect trainable variables:
@@ -106,8 +108,10 @@ class policy_gradients:
     
     def multinomial(self):
         
+        state, policy = self.state, self.policy
+        
         ## identify the free positions:    
-        free_positions = tf.to_float(tf.equal(self.state,tf.zeros((1,9))))
+        free_positions = tf.to_float(tf.equal(state,tf.zeros((1,9))))
     
         fm_mapping = lambda x: tf.diag(tf.reshape(x,(9,)))
     
@@ -115,7 +119,7 @@ class policy_gradients:
 
 
         ## calculate probability vector:
-        pvec_mapping = lambda x: tf.transpose(tf.matmul(x,tf.transpose(self.policy)))
+        pvec_mapping = lambda x: tf.transpose(tf.matmul(x,tf.transpose(policy)))
         
         prob_vec = tf.map_fn(pvec_mapping,free_matrices)
         prob = prob_vec/(tf.reduce_sum(prob_vec)+tf.constant(1e-5))
@@ -131,17 +135,23 @@ class policy_gradients:
         ## define multinomial distribution:
         
         return self.dist.sample()
+    
+    def log_prob(self):
+        
+        log_p = self.dist.log_prob(self.action)
+        
+        return tf.where(tf.is_nan(log_p), tf.ones_like(log_p) * 0.1, log_p)
             
     def reinforce_loss(self):
         """
             The REINFORCE loss without subtracting a baseline. 
         """
                                                 
-        return self.dist.log_prob(self.action)*self.reward
+        return self.log_prob*self.reward
     
     def baseline(self):
         """
             A state-dependent baseline calculated using the value estimator V(s,a).
         """
                 
-        return  self.dist.log_prob(self.action)*self.value_estimate
+        return  self.log_prob*self.value_estimate
