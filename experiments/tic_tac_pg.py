@@ -30,7 +30,9 @@ class policy_gradients:
         self.value_estimate = self.value_estimator()
         self.baseline = self.baseline() 
         
-        self.average_loss = -1.0*tf.reduce_mean(tf.subtract(self.reinforce_loss,self.baseline)) + \
+        #self.average_loss = tf.reduce_mean(self.reinforce_loss)
+        
+        self.average_loss = tf.reduce_mean(tf.subtract(self.reinforce_loss,self.baseline)) + \
                             0.5*tf.reduce_mean(tf.square(self.value_estimate-self.reward))
         
         ## collect trainable variables:

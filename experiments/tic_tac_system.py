@@ -26,7 +26,7 @@ class tic_tac_system:
         
         ## track learning progress:
         self.iter = 0
-        self.score = np.zeros(epochs)
+        self.score = np.zeros(epochs-1)
         
         
     def restart(self):
@@ -80,10 +80,10 @@ class tic_tac_system:
                 count += 1
                 
                 ## reward check-pointing:
-                q = self.G.X_score(self.Z)
+                q = self.G.X_score(self.Z)*50
                 
                 if q != 0.0:
-                    rewards[i][:count] = np.geomspace(q/np.abs(q),q, num=count)
+                    rewards[i][:count] = np.geomspace(q,q/np.abs(q), num=count)
                     
                     ## update the average score:
                     mu_score = mu_score*(N/(N+1))+q/(N+1)
@@ -95,11 +95,11 @@ class tic_tac_system:
                 self.Z += -1.0*player_2.move()
                 
                 ## reward check-pointing:
-                q = self.G.X_score(self.Z)
+                q = self.G.X_score(self.Z)*50
                 
                 if q != 0.0:
                     ## discount the reward in a geometric manner:
-                    rewards[i][:count] = np.geomspace(q/np.abs(q),q, num=count)
+                    rewards[i][:count] = np.geomspace(q,q/np.abs(q), num=count)
                     
                     ## update the average score:
                     mu_score = mu_score*(N/(N+1))+q/(N+1)
@@ -124,7 +124,7 @@ class tic_tac_system:
         
         batch, rewards = self.rollouts(sess)
         
-        print(np.shape(batch))
+        print(rewards[0])
                     
         for i in range(self.model.batch_size):
             
