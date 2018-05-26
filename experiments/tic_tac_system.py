@@ -69,10 +69,10 @@ class tic_tac_system:
                 
                 action = sess.run(self.model.sample_action,feed_dict={self.model.state:self.Z.flatten().reshape((1,9))})
                                 
-                log_p = sess.run(self.model.log_prob,feed_dict={self.model.state:self.Z.flatten().reshape((1,9))})
+                #log_p = sess.run(self.model.log_prob,feed_dict={self.model.state:self.Z.flatten().reshape((1,9))})
 
                 #print(action)
-                print(log_p)
+                #print(log_p)
                 
                 self.Z += action.reshape((3,3))
                 
@@ -133,7 +133,7 @@ class tic_tac_system:
             train_feed = {self.model.state_action : batch[i].reshape((9,18)),self.model.state: states, \
                           self.model.action: actions, self.model.reward: rewards[i].reshape((9,1))}
             
-            #print(sess.run(self.model.average_loss,feed_dict = train_feed))
+            print(sess.run(self.model.gvs,feed_dict = train_feed))
             
             #sess.run(self.model.accum_ops,feed_dict = train_feed)
                 

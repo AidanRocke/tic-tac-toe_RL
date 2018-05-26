@@ -11,9 +11,9 @@ import numpy as np
 
 
 from clever_stochastician import clever_stochastician as opponent
-model = policy_gradients(42,10)
+model = policy_gradients(42,1)
 
-tic_tac = tic_tac_system(G,model,opponent,100,5,0.9)
+tic_tac = tic_tac_system(G,model,opponent,2,5,0.9)
 
 scores = simulator(tic_tac)
 

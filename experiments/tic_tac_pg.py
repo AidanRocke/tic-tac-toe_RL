@@ -36,18 +36,28 @@ class policy_gradients:
         #self.average_loss = tf.reduce_mean(tf.subtract(self.reinforce_loss,self.baseline)) + \
         #                   0.5*tf.reduce_mean(tf.square(self.value_estimate-self.reward))
         
-        self.average_loss = tf.reduce_mean(-tf.reduce_sum(tf.subtract(self.reinforce_loss,self.baseline))) + \
-                            0.5*tf.reduce_mean(tf.reduce_sum(tf.square(self.value_estimate-self.reward)))
+        self.average_loss = -1.0*tf.reduce_mean(self.reinforce_loss)
+        
+        #self.average_loss = -1.0*tf.reduce_mean(tf.subtract(self.reinforce_loss,self.baseline)) + \
+         #                   0.5*tf.reduce_mean(tf.square(self.value_estimate-self.reward))
         
         ## collect trainable variables:
-        self.TV = tf.trainable_variables()
+        #self.TV = tf.trainable_variables()
+        
+        self.TV = tf.get_collection(key = tf.GraphKeys.TRAINABLE_VARIABLES,
+                                     scope= "policy_net")
         
         ## define training operations:
         self.optimizer = tf.train.AdagradOptimizer(0.01)
         
         self.accum_vars = [tf.Variable(tf.zeros_like(tv.initialized_value()), trainable=False) for tv in self.TV]                                        
         self.zero_ops = [tv.assign(tf.zeros_like(tv)) for tv in self.accum_vars]
-        self.gvs = self.optimizer.compute_gradients(self.average_loss, self.TV)
+        
+        ## clip gradients:
+        self.gvs_ = self.optimizer.compute_gradients(self.average_loss, self.TV)
+        #self.gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in self.gvs_]
+        self.gvs =tf.where(tf.is_nan(self.gvs_), tf.zeros_like(self.gvs_), self.gvs_)
+        
         self.accum_ops = [self.accum_vars[i].assign_add(gv[0]) for i, gv in enumerate(self.gvs)]
         
         self.train_step = self.optimizer.apply_gradients([(self.accum_vars[i], gv[1]) for i, gv in enumerate(self.gvs)])
