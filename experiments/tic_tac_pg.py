@@ -10,7 +10,7 @@ import tensorflow as tf
 
 class policy_gradients:
     
-    def __init__(self,seed,batch_size):
+    def __init__(self,lr,seed,batch_size):
         self.batch_size = batch_size ## number of rollouts
         
         self.state = tf.placeholder(tf.float32, [None, 9]) ## the board representation
@@ -44,7 +44,7 @@ class policy_gradients:
         #                             scope= "policy_net")
         
         ## define training operations:
-        self.optimizer = tf.train.AdagradOptimizer(0.01)
+        self.optimizer = tf.train.AdagradOptimizer(lr)
         
         self.accum_vars = [tf.Variable(tf.zeros_like(tv.initialized_value()), trainable=False) for tv in self.TV]                                        
         self.zero_ops = [tv.assign(tf.zeros_like(tv)) for tv in self.accum_vars]

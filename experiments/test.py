@@ -14,7 +14,7 @@ from evaluation import game_evaluation as G
 
 G = G()
 
-model = policy_gradients(42,40)
+model = policy_gradients(0.1,42,40)
 
 tic_tac = tic_tac_system(G,model,opponent,600,5,0.9)
 
