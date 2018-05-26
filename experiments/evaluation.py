@@ -31,10 +31,10 @@ class game_evaluation:
         scores, draw = self.scores(matrix), self.draw(matrix)
         
         if np.max(scores) == 3:
-            return 1.0 + draw
+            return 1.0
         
         elif np.min(scores) == -3.0:
-            return -1.0 + draw
+            return -1.0
         
         else:
             return 0.0 + draw

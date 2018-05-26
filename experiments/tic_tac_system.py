@@ -68,14 +68,7 @@ class tic_tac_system:
             while self.G.X_score(self.Z) == 0.0:
                 
                 action = sess.run(self.model.sample_action,feed_dict={self.model.state:self.Z.flatten().reshape((1,9))})
-                
-                policy = sess.run(self.model.policy,feed_dict={self.model.state:self.Z.flatten().reshape((1,9))})
-
-                #log_p = sess.run(self.model.log_prob,feed_dict={self.model.state:self.Z.flatten().reshape((1,9))})
-
-                #print(action)
-                print(policy)
-                
+                                
                 self.Z += action.reshape((3,3))
                 
                 ## update rollout:
@@ -141,5 +134,4 @@ class tic_tac_system:
                 
                     
         sess.run(self.model.train_step)
-            
     
