@@ -16,7 +16,7 @@ G = G()
 
 model = policy_gradients(0.1,42,40)
 
-tic_tac = tic_tac_system(G,model,opponent,600,5,0.5)
+tic_tac = tic_tac_system(G,model,opponent,600,5,0.9)
 
 scores = simulator(tic_tac)
 
