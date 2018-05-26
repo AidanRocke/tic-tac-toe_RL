@@ -33,9 +33,11 @@ class policy_gradients:
         self.baseline = self.baseline() 
         
         #self.average_loss = tf.reduce_mean(self.reinforce_loss)
+        #self.average_loss = tf.reduce_mean(tf.subtract(self.reinforce_loss,self.baseline)) + \
+        #                   0.5*tf.reduce_mean(tf.square(self.value_estimate-self.reward))
         
-        self.average_loss = -1.0*tf.reduce_mean(tf.subtract(self.reinforce_loss,self.baseline)) + \
-                            0.5*tf.reduce_mean(tf.square(self.value_estimate-self.reward))
+        self.average_loss = tf.reduce_mean(-tf.reduce_sum(tf.subtract(self.reinforce_loss,self.baseline))) + \
+                            0.5*tf.reduce_mean(tf.reduce_sum(tf.square(self.value_estimate-self.reward)))
         
         ## collect trainable variables:
         self.TV = tf.trainable_variables()
@@ -107,11 +109,9 @@ class policy_gradients:
         return tf.nn.elu(tf.add(tf.matmul(h, w_o),bias_2))
     
     def multinomial(self):
-        
-        state, policy = self.state, self.policy
-        
+                
         ## identify the free positions:    
-        free_positions = tf.to_float(tf.equal(state,tf.zeros((1,9))))
+        free_positions = tf.to_float(tf.equal(self.state,tf.zeros((1,9))))
     
         fm_mapping = lambda x: tf.diag(tf.reshape(x,(9,)))
     
@@ -119,7 +119,7 @@ class policy_gradients:
 
 
         ## calculate probability vector:
-        pvec_mapping = lambda x: tf.transpose(tf.matmul(x,tf.transpose(policy)))
+        pvec_mapping = lambda x: tf.transpose(tf.matmul(x,tf.transpose(self.policy)))
         
         prob_vec = tf.map_fn(pvec_mapping,free_matrices)
         prob = prob_vec/(tf.reduce_sum(prob_vec)+tf.constant(1e-5))
@@ -136,11 +136,21 @@ class policy_gradients:
         
         return self.dist.sample()
     
+    #def log_prob(self):
+        
+    #    log_p = tf.log(self.dist.prob(self.action)+tf.constant(1e-8))
+                
+    #    return tf.where(tf.is_nan(log_p), tf.ones_like(log_p) * 0.1, log_p)
+    
     def log_prob(self):
         
-        log_p = self.dist.log_prob(self.action)
+        ## use softmax to calculate probabilities:
+        probs = tf.nn.softmax(self.policy)
         
-        return tf.where(tf.is_nan(log_p), tf.ones_like(log_p) * 0.1, log_p)
+        ## approximate the maximum probability:
+        max_p = tf.pow(tf.reduce_sum(tf.pow(probs,100)),1/100)
+        
+        return tf.log(max_p+tf.constant(1e-8))
             
     def reinforce_loss(self):
         """
