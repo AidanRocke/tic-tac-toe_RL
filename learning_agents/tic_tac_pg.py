@@ -128,7 +128,6 @@ class policy_gradients:
         
         prob_vec = tf.map_fn(pvec_mapping,free_matrices)
         prob = prob_vec/(tf.reduce_sum(prob_vec)+tf.constant(1e-5))
-
     
         return tf.contrib.distributions.Multinomial(total_count=1., probs=prob)
     
