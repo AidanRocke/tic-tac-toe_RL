@@ -9,10 +9,12 @@ Created on Tue May 22 22:28:04 2018
 import tensorflow as tf
 
 ## The simulator is used to train the policy gradient model. 
-## More details in vanilla_system. 
+## More details in tic_tac_system. 
+
+#from clever_stochastician import clever_stochastician as CS
 
 #tic_tac = tic_tac_system(model,opponent,epochs,depth,gamma)
-# model = policy_gradients(seed,batch_size)
+# model = policy_gradients(lr=0.01,seed=42,batch_size=30)
 
 def simulator(tic_tac):    
         
