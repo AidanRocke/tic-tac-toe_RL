@@ -14,8 +14,9 @@ import numpy as np
 
 #from clever_stochastician import clever_stochastician as CS
 
-#tic_tac = tic_tac_system(model,opponent,epochs,depth,gamma)
 # model = policy_gradients(lr=0.01,seed=42,batch_size=30)
+#tic_tac = tic_tac_system(model,opponent,epochs,depth,gamma)
+
 
 def simulator(tic_tac):    
         

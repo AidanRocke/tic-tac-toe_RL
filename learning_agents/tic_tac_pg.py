@@ -25,8 +25,9 @@ class policy_gradients:
         
         ## define the probability distribution:
         self.dist = self.multinomial()
-        self.log_prob = self.log_prob()*(p_est == 1) + self.max_log_prob()*(p_est == 2) + \
-                        self.gumbel_softmax(self.T)*(p_est ==3)
+        self.log_prob = self.log_prob()*(p_est == 1) + self.T_softmax(self.T)*(p_est == 2) + \
+                        self.max_log_prob()*(p_est == 3)
+                        
         self.sample_action = self.sample_action()
         
         ## define what is necessary for the loss:
@@ -41,9 +42,6 @@ class policy_gradients:
         
         ## collect trainable variables:
         self.TV = tf.trainable_variables()
-        
-        #self.TV = tf.get_collection(key = tf.GraphKeys.TRAINABLE_VARIABLES,
-        #                             scope= "policy_net")
         
         ## define training operations:
         self.optimizer = tf.train.AdagradOptimizer(lr)
@@ -152,41 +150,27 @@ class policy_gradients:
         ## approximate the maximum probability:
         max_p = tf.pow(tf.reduce_sum(tf.pow(probs,15)),1/15)
         
-        return tf.log(max_p+tf.constant(1e-8))
+        return tf.log(max_p)
     
     def log_prob(self):
         
         ## use softmax to calculate probabilities:
         probs = tf.nn.softmax(self.policy)
         
-        return tf.log(probs+tf.constant(1e-10))
+        return tf.log(probs)
     
-    def sample_gumbel(self,shape, eps=1e-20): 
-      """Sample from Gumbel(0, 1)"""
-      U = tf.random_uniform(shape,minval=0,maxval=1)
-      return -tf.log(-tf.log(U + eps) + eps)
-    
-    def gumbel_softmax_sample(self,logits, temperature): 
-      """ Draw a sample from the Gumbel-Softmax distribution"""
-      y = logits + self.sample_gumbel(tf.shape(logits))
-      return tf.nn.softmax( y / temperature)
-    
-    def gumbel_softmax(self,temperature):
-      """Sample from the Gumbel-Softmax distribution and optionally discretize.
+    def T_softmax(self,temperature):
+      """Sample from the Gumbel-Softmax distribution.
       Args:
         logits: [batch_size, n_class] unnormalized log-probs
         temperature: non-negative scalar
-        hard: if True, take argmax, but differentiate w.r.t. soft sample y
       Returns:
-        [batch_size, n_class] sample from the Gumbel-Softmax distribution.
-        If hard=True, then the returned sample will be one-hot, otherwise it will
-        be a probabilitiy distribution that sums to 1 across classes
+        [batch_size, n_class] sample from the T-Softmax distribution.
       """
-      logits = tf.log(tf.nn.softmax(self.policy))
       
-      y = self.gumbel_softmax_sample(logits, temperature)
+      probs = tf.nn.softmax(self.policy/temperature)
     
-      return tf.log(y+tf.constant(1e-10))
+      return tf.log(probs)
             
     def reinforce_loss(self):
         """
