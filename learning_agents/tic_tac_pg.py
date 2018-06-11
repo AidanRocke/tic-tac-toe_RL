@@ -10,8 +10,9 @@ import tensorflow as tf
 
 class policy_gradients:
     
-    def __init__(self,lr,seed,batch_size):
+    def __init__(self,lr,seed,batch_size,p_est):
         self.batch_size = batch_size ## number of rollouts
+        self.T = 0.1 ## the temperature
         
         self.state = tf.placeholder(tf.float32, [None, 9]) ## the board representation
         self.action = tf.placeholder(tf.float32, [None, 9]) ## the agent's action
@@ -24,7 +25,8 @@ class policy_gradients:
         
         ## define the probability distribution:
         self.dist = self.multinomial()
-        self.log_prob = self.log_prob()
+        self.log_prob = self.log_prob()*(p_est == 1) + self.max_log_prob()*(p_est == 2) + \
+                        self.gumbel_softmax(self.T)*(p_est ==3)
         self.sample_action = self.sample_action()
         
         ## define what is necessary for the loss:
@@ -57,6 +59,8 @@ class policy_gradients:
         
         self.train_step = self.optimizer.apply_gradients([(self.accum_vars[i], gv[1]) for i, gv in enumerate(self.gvs)])
     
+        self.init_g = tf.global_variables_initializer()
+        self.init_l = tf.local_variables_initializer()
     def init_weights(self,shape,var_name):
         """
             Xavier initialisation of neural networks
@@ -140,21 +144,49 @@ class policy_gradients:
         
         return self.dist.sample()
     
-    #def log_prob(self):
+    def max_log_prob(self):
         
-    #    log_p = tf.log(self.dist.prob(self.action)+tf.constant(1e-8))
-                
-    #    return tf.where(tf.is_nan(log_p), tf.ones_like(log_p) * 0.1, log_p)
+        ## use softmax to calculate probabilities:
+        probs = tf.nn.softmax(self.policy)
+        
+        ## approximate the maximum probability:
+        max_p = tf.pow(tf.reduce_sum(tf.pow(probs,15)),1/15)
+        
+        return tf.log(max_p+tf.constant(1e-8))
     
     def log_prob(self):
         
         ## use softmax to calculate probabilities:
         probs = tf.nn.softmax(self.policy)
         
-        ## approximate the maximum probability:
-        max_p = tf.pow(tf.reduce_sum(tf.pow(probs,100)),1/100)
-        
-        return tf.log(max_p+tf.constant(1e-8))
+        return tf.log(probs+tf.constant(1e-10))
+    
+    def sample_gumbel(self,shape, eps=1e-20): 
+      """Sample from Gumbel(0, 1)"""
+      U = tf.random_uniform(shape,minval=0,maxval=1)
+      return -tf.log(-tf.log(U + eps) + eps)
+    
+    def gumbel_softmax_sample(self,logits, temperature): 
+      """ Draw a sample from the Gumbel-Softmax distribution"""
+      y = logits + self.sample_gumbel(tf.shape(logits))
+      return tf.nn.softmax( y / temperature)
+    
+    def gumbel_softmax(self,temperature):
+      """Sample from the Gumbel-Softmax distribution and optionally discretize.
+      Args:
+        logits: [batch_size, n_class] unnormalized log-probs
+        temperature: non-negative scalar
+        hard: if True, take argmax, but differentiate w.r.t. soft sample y
+      Returns:
+        [batch_size, n_class] sample from the Gumbel-Softmax distribution.
+        If hard=True, then the returned sample will be one-hot, otherwise it will
+        be a probabilitiy distribution that sums to 1 across classes
+      """
+      logits = tf.log(tf.nn.softmax(self.policy))
+      
+      y = self.gumbel_softmax_sample(logits, temperature)
+    
+      return tf.log(y+tf.constant(1e-10))
             
     def reinforce_loss(self):
         """
@@ -167,5 +199,5 @@ class policy_gradients:
         """
             A state-dependent baseline calculated using the value estimator V(s,a).
         """
-                
-        return  self.log_prob*self.value_estimate
+
+        return self.log_prob*self.value_estimate

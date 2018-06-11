@@ -7,6 +7,7 @@ Created on Tue May 22 22:28:04 2018
 """
 
 import tensorflow as tf
+import numpy as np
 
 ## The simulator is used to train the policy gradient model. 
 ## More details in tic_tac_system. 
@@ -21,11 +22,14 @@ def simulator(tic_tac):
     with tf.Session() as sess:
         
         ### initialise the variables:
-        sess.run(tf.global_variables_initializer())
+        sess.run(tic_tac.model.init_g)
+        sess.run(tic_tac.model.init_l)
         
         for i in range(tic_tac.epochs-1):
             
-            tic_tac.batch_update(sess)   
+            tic_tac.batch_update(sess) 
+            
+            tic_tac.model.T = 1/np.log(i+np.e) ## update the temperature
             
     scores = tic_tac.score         
             
