@@ -44,7 +44,7 @@ class policy_gradients:
         self.TV = tf.trainable_variables()
         
         ## define training operations:
-        self.optimizer = tf.train.AdagradOptimizer(lr)
+        self.optimizer = tf.train.AdagradOptimizer(lr,name='adagrad')
         
         self.accum_vars = [tf.Variable(tf.zeros_like(tv.initialized_value()), trainable=False) for tv in self.TV]                                        
         self.zero_ops = [tv.assign(tf.zeros_like(tv)) for tv in self.accum_vars]
@@ -59,6 +59,7 @@ class policy_gradients:
     
         self.init_g = tf.global_variables_initializer()
         self.init_l = tf.local_variables_initializer()
+        
     def init_weights(self,shape,var_name):
         """
             Xavier initialisation of neural networks

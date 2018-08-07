@@ -127,9 +127,7 @@ class tic_tac_system:
         
             train_feed = {self.model.state_action : batch[i].reshape((9,18)),self.model.state: states, \
                           self.model.action: actions, self.model.reward: rewards[i].reshape((9,1))}
-            
-            #print(sess.run(self.model.gvs,feed_dict = train_feed))
-            
+                        
             sess.run(self.model.accum_ops,feed_dict = train_feed)
                 
                     
