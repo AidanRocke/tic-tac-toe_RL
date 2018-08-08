@@ -25,7 +25,7 @@ class lstm_agent:
         self.cell_ = self.cell_state()
         self.output_ = self.output_gate()
         self.H = tf.multiply(self.output_,tf.nn.tanh(self.cell_))
-        self.policy = self.policy()
+        self.next_move = self.next_move()
         
         self.update = self.update()
     
@@ -146,7 +146,7 @@ class lstm_agent:
         
         return tf.nn.sigmoid(out_sum)
     
-    def policy(self):
+    def next_move(self):
         
         out = tf.layers.conv2d(inputs = self.H,filters=3,
                                         padding="same",
@@ -155,9 +155,9 @@ class lstm_agent:
             
         flat = tf.layers.Flatten()(out)
                 
-        policy = tf.layers.dense(inputs=flat,units=9,activation=tf.nn.softmax)
+        probabilities = tf.layers.dense(inputs=flat,units=9,activation=tf.nn.softmax)
         
-        return policy
+        return probabilities
     
     def update(self):
         """

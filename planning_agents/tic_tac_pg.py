@@ -14,6 +14,11 @@ class policy_gradients:
     def __init__(self,lr,seed,batch_size,max_iter):
         self.seed = seed ## the random seed
         self.batch_size = batch_size ## number of rollouts
+        
+        ## data structures for the tf.while_loop
+        self.iter = 0
+        self.policy_array = tf.TensorArray(dtype=tf.float32,size=0,dynamic_size=True,
+                                           clear_after_read=False)
         self.max_iter = max_iter
         
         self.lstm_agent = lstm_agent(seed)
@@ -24,6 +29,7 @@ class policy_gradients:
         self.state_action = tf.placeholder(tf.float32, [1, 18]) ## (state,action)
         self.reward = tf.placeholder(tf.float32, [1, 1]) ## the time-discounted reward signal
         
+        self.next_move = self.lstm_agent.next_move
         self.policy = self.controller()
         
         ## define the probability distribution:
@@ -72,27 +78,26 @@ class policy_gradients:
         
         with tf.variable_scope("next_move",reuse=tf.AUTO_REUSE):
             
-            self.iter = 0
-            self.move = self.lstm_agent.policy
-            
-            self.policy_array = tf.TensorArray(dtype=tf.float32,size=0,dynamic_size=True)
-        
-
             def body(iter_,out):
             
                 self.lstm_agent.update 
                                 
-                self.policy_array = self.policy_array.write(iter_,self.move)
+                self.policy_array = self.policy_array.write(iter_,self.next_move)
                                 
                 return iter_+1, self.policy_array
 
             def condition(iter_,out):
                 
-                return tf.less(iter_,self.max_iter)
+                return iter_ < self.max_iter
             
             _, policy_array = tf.while_loop(condition,body,[self.iter,self.policy_array])
             
             policies = policy_array.stack()
+            
+            ## reset the iterator and the policy array:
+            self.iter = 0
+            self.policy_array = tf.TensorArray(dtype=tf.float32,size=0,dynamic_size=True,
+                                               clear_after_read=False)
         
         return policies[-1]
     

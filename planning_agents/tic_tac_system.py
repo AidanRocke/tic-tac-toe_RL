@@ -73,6 +73,7 @@ class tic_tac_system:
                 feed = {self.model.X_t:zero_pad_state.reshape((1,5,5,1)),
                         self.model.state:self.Z.flatten().reshape((1,9))}
                 
+                ## add the agent's move:
                 action = sess.run(self.model.sample_action,feed_dict=feed)
                                 
                 self.Z += action.reshape((3,3))
@@ -81,9 +82,10 @@ class tic_tac_system:
                 rollouts[i][count] = np.concatenate((self.Z.flatten(),action.reshape((9,))))
                 count += 1
                 
-                ## reward check-pointing:
+                ## update the current reward:
                 q = self.G.X_score(self.Z)*5
                 
+                ## check that the game is not over:
                 if q != 0.0:
                     rewards[i][:count] = np.geomspace(q,q/np.abs(q), num=count)
                     
@@ -92,13 +94,14 @@ class tic_tac_system:
                     N += 1
                     break
                 
-                ## add the consequence of the opponent's move:
+                ## add the opponent's move:
                 player_2 = self.opponent(self.G,-1.0*self.Z,self.depth,self.gamma)
                 self.Z += -1.0*player_2.move()
                 
-                ## reward check-pointing:
+                ## update the current reward:
                 q = self.G.X_score(self.Z)*5
                 
+                ## check that the game is not over:
                 if q != 0.0:
                     ## discount the reward in a geometric manner:
                     rewards[i][:count] = np.geomspace(q,q/np.abs(q), num=count)
@@ -138,7 +141,7 @@ class tic_tac_system:
         
                 train_feed = {self.model.state_action : batch[i][j].reshape((1,18)),
                               self.model.state: states[j].reshape((1,9)),
-                              self.model.X_t: X,
+                              self.model.X_t: X.reshape((1,5,5,1)),
                               self.model.action: actions[j].reshape((1,9)), 
                               self.model.reward: R[j].reshape((1,1))}
                         
