@@ -17,8 +17,7 @@ class policy_gradients:
         
         ## data structures for the tf.while_loop
         self.iter = 0
-        self.policy_array = tf.TensorArray(dtype=tf.float32,size=0,dynamic_size=True,
-                                           clear_after_read=False)
+        self.policy_array = tf.TensorArray(dtype=tf.float32,size=0,dynamic_size=True)
         self.max_iter = max_iter
         
         self.lstm_agent = lstm_agent(seed)
@@ -78,27 +77,26 @@ class policy_gradients:
         
         with tf.variable_scope("next_move",reuse=tf.AUTO_REUSE):
             
-            def body(iter_,out):
+            def body(iter_,array):
             
                 self.lstm_agent.update 
                                 
-                self.policy_array = self.policy_array.write(iter_,self.next_move)
+                array = array.write(iter_,self.next_move)
                                 
-                return iter_+1, self.policy_array
+                return iter_+1, array
 
-            def condition(iter_,out):
+            def condition(iter_,array):
                 
                 return iter_ < self.max_iter
             
-            _, policy_array = tf.while_loop(condition,body,[self.iter,self.policy_array])
-            
-            policies = policy_array.stack()
-            
             ## reset the iterator and the policy array:
-            self.iter = 0
-            self.policy_array = tf.TensorArray(dtype=tf.float32,size=0,dynamic_size=True,
-                                               clear_after_read=False)
-        
+            iter_ = 0
+            policy_array = tf.TensorArray(dtype=tf.float32,size=0,dynamic_size=True)
+            
+            _, policy_array_ = tf.while_loop(condition,body,[iter_,policy_array])
+            
+            policies = policy_array_.stack()
+            
         return policies[-1]
     
     def log_prob(self):
