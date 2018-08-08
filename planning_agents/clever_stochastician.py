@@ -1,23 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sun May 20 14:15:02 2018
+Created on Tue May 22 12:48:19 2018
 
 @author: aidanrocke
 """
 
 import numpy as np
-from evaluation import game_evaluation
+from evaluation import game_evaluation as G
 
-class naive_stochastician:
+G = G()
+
+class clever_stochastician:
     
-    def __init__(self,initial_matrix,max_depth,gamma):
-        self.turn = 1.0
+    def __init__(self,G,initial_matrix,max_depth,gamma):
+        self.G = G
         self.initial = initial_matrix
         self.gamma = gamma
         self.R = np.array([[0,0,1],[0,1,0],[1,0,0]])
         self.state = 0.0
-        self.reward_constant = 1e3
+        self.reward_constant = 50
         
         ## num_positions*num_select ~ max_breadth
         self.num_positions = int(9 - np.sum(np.abs(self.initial)))
@@ -29,15 +31,16 @@ class naive_stochastician:
         ## running values for each action:
         self.values = np.zeros(self.num_actions)
         
+        self.turn = 1.0
+        
     def update_turn(self):
         
         self.turn *= -1.0
         
+        
     def score(self,matrix):
         
-        game_state = game_evaluation(matrix)
-        
-        return game_state.reward, game_state.X_score*(game_state.X_score != 0.0)
+        return self.G.reward(matrix), self.G.X_score(matrix)*(self.G.X_score(matrix) != 0.0)
         
     def reward(self,matrix):
     
@@ -61,47 +64,8 @@ class naive_stochastician:
                     
         return matrices
     
-    def credit_assignment(self,batch,batch_indices):
-    
-        N = len(batch_indices)
-    
-        ## calculate batch_values:
-        batch_values = np.array([self.turn*self.reward(batch[i]) for i in range(N)])
-        mu_batch  = np.mean(batch_values)
-    
-        ## define sub-index of important matrices:
-        sub_index = np.where(batch_values > mu_batch)[0]
-    
-        rewards, counts = np.zeros(self.num_actions), np.zeros(self.num_actions)
-            
-        if len(sub_index) > 2:
-            
-            for i in sub_index:
-    
-                ## calculate index:
-                j = int(batch_indices[i])
-                    
-                ## update rewards using running average:
-                rewards[j] = rewards[j]*(counts[j]/(counts[j]+1))+batch_values[i]/(counts[j]+1)
-                counts[j] += 1
-    
-            ## update the value of each action:
-            for k in range(self.num_actions):
-                self.values[k] = self.gamma*self.values[k] + rewards[k]
-                
-                if np.max(rewards) >= self.max_reward:
-                    self.max_reward = np.max(rewards)
-                    self.iter += 1
-                    
-                elif self.iter > 2:
-                    self.state = 1.0
-                    break
-    
-        return sub_index
-
-
     def matrix_selection(self,matrices):
-            
+        
         N = len(matrices)
         rewards = np.zeros(N)
                 
@@ -111,22 +75,45 @@ class naive_stochastician:
         return matrices[np.argsort(-1.0*rewards)][:self.num_positions], self.turn*np.max(rewards)
     
     def matrix_evolution(self,batch,batch_indices):
-    
-        ix, B = [], []
                 
-        sub_index = self.credit_assignment(batch,batch_indices)
-                            
+        ix, B = [], []
+                    
+        N = len(batch_indices)
+        
+        batch_values = np.array([self.turn*self.reward(batch[i]) for i in range(N)])
+        mu_batch  = np.mean(batch_values)
+    
+        sub_index = np.where(batch_values > mu_batch)[0]
+    
+        rewards, counts = np.zeros(self.num_actions), np.zeros(self.num_actions)
+                        
         if len(sub_index) > 2:
     
             for i in sub_index:
-    
                 M, R = self.matrix_selection(self.matrix_generation(batch[i]))
-    
+                                                            
+                ## calculate index:
                 j = int(batch_indices[i])
-    
-                ## choose the top 2:
+            
+                ## choose the top 3:
                 B.extend(M[:2])
                 ix += [j]*len(M[:2])
+                    
+                ## update rewards using running average:
+                rewards[j] = rewards[j]*(counts[j]/(counts[j]+1))+R/(counts[j]+1)
+                counts[j] += 1
+                        
+        ## update the value of each action:
+        for k in range(self.num_actions):
+            self.values[k] = self.gamma*self.values[k] + rewards[k]
+            
+            if np.max(rewards) >= self.max_reward:
+                self.max_reward = np.max(rewards)
+                self.iter += 1
+                
+            elif self.iter > 2:
+                self.state = 1.0
+                break
     
         return np.array(B), np.array(ix)
                             

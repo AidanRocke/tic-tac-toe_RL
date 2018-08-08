@@ -19,7 +19,7 @@ class clever_stochastician:
         self.gamma = gamma
         self.R = np.array([[0,0,1],[0,1,0],[1,0,0]])
         self.state = 0.0
-        self.reward_constant = 1e10
+        self.reward_constant = 50
         
         ## num_positions*num_select ~ max_breadth
         self.num_positions = int(9 - np.sum(np.abs(self.initial)))
