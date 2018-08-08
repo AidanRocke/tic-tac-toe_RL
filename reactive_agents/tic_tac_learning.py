@@ -30,8 +30,6 @@ def simulator(tic_tac):
             
             tic_tac.batch_update(sess) 
             
-            tic_tac.model.T = 1/np.log(i+np.e) ## update the temperature
-
             if i % 10 == 0:
 
             	print(i)

@@ -10,9 +10,8 @@ import tensorflow as tf
 
 class policy_gradients:
     
-    def __init__(self,lr,seed,batch_size,p_est):
+    def __init__(self,lr,seed,batch_size):
         self.batch_size = batch_size ## number of rollouts
-        self.T = 0.1 ## the temperature
         
         self.state = tf.placeholder(tf.float32, [None, 9]) ## the board representation
         self.action = tf.placeholder(tf.float32, [None, 9]) ## the agent's action
@@ -25,8 +24,7 @@ class policy_gradients:
         
         ## define the probability distribution:
         self.dist = self.multinomial()
-        self.log_prob = self.log_prob()*(p_est == 1) + self.T_softmax(self.T)*(p_est == 2) + \
-                        self.max_log_prob()*(p_est == 3)
+        self.log_prob = self.log_prob()
                         
         self.sample_action = self.sample_action()
         
@@ -34,9 +32,7 @@ class policy_gradients:
         self.reinforce_loss = self.reinforce_loss()
         self.value_estimate = self.value_estimator()
         self.baseline = self.baseline() 
-        
-        self.average_loss = -1.0*tf.reduce_mean(self.reinforce_loss)
-        
+                
         self.average_loss = -1.0*tf.reduce_mean(tf.subtract(self.reinforce_loss,self.baseline)) + \
                             0.5*tf.reduce_mean(tf.square(self.value_estimate-self.reward))
         
@@ -125,7 +121,6 @@ class policy_gradients:
     
         free_matrices = tf.map_fn(fm_mapping,free_positions)
 
-
         ## calculate probability vector:
         pvec_mapping = lambda x: tf.transpose(tf.matmul(x,tf.transpose(self.policy)))
         
@@ -143,35 +138,12 @@ class policy_gradients:
         
         return self.dist.sample()
     
-    def max_log_prob(self):
-        
-        ## use softmax to calculate probabilities:
-        probs = tf.nn.softmax(self.policy)
-        
-        ## approximate the maximum probability:
-        max_p = tf.pow(tf.reduce_sum(tf.pow(probs,15)),1/15)
-        
-        return tf.log(max_p)
-    
     def log_prob(self):
         
         ## use softmax to calculate probabilities:
         probs = tf.nn.softmax(self.policy)
         
         return tf.log(probs)
-    
-    def T_softmax(self,temperature):
-      """Sample from the Gumbel-Softmax distribution.
-      Args:
-        logits: [batch_size, n_class] unnormalized log-probs
-        temperature: non-negative scalar
-      Returns:
-        [batch_size, n_class] sample from the T-Softmax distribution.
-      """
-      
-      probs = tf.nn.softmax(self.policy/temperature)
-    
-      return tf.log(probs)
             
     def reinforce_loss(self):
         """

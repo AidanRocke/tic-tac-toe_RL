@@ -31,9 +31,9 @@ class tic_tac_system:
         
     def restart(self):
         """
-            Start with a board that has two pieces with variable initialisation.
+            Place two pieces on the board. 
         """
-        ## start with an empty board:
+        ## create an empty board:
         self.Z = np.zeros((3,3))
         
         ix = np.random.choice(9)
@@ -47,7 +47,7 @@ class tic_tac_system:
         """
             Collects a mini-batch of recent game experience and their outcomes:
                 
-                input: sess variable for tensorflow operations
+                input: tensorflow session
                 
                 output: 
                     rollouts: state-action pairs
