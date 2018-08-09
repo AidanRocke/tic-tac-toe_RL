@@ -11,7 +11,7 @@ from evaluation import game_evaluation as G
 
 G = G()
 
-class clever_stochastician:
+class stochastician:
     
     def __init__(self,G,initial_matrix,max_depth,gamma):
         self.G = G

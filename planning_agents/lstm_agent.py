@@ -30,13 +30,9 @@ class lstm_agent:
         self.update = self.update()
     
 
-    def conv2d(self,input_tensor,weight_init,name,filter_shape=None):
-        
-            if filter_shape == None:
-            
-                kernel = tf.Variable(initial_value=weight_init)
+    def conv2d(self,input_tensor,weight_init,name,filter_shape):
                 
-            elif weight_init == 'glorot':
+            if weight_init == 'glorot':
                 
                 ## set random seed
                 np.random.seed(self.seed)
@@ -147,6 +143,9 @@ class lstm_agent:
         return tf.nn.sigmoid(out_sum)
     
     def next_move(self):
+        """
+            A function that approximates the probability map for the next move. 
+        """
         
         out = tf.layers.conv2d(inputs = self.H,filters=3,
                                         padding="same",

@@ -16,8 +16,6 @@ class policy_gradients:
         self.batch_size = batch_size ## number of rollouts
         
         ## data structures for the tf.while_loop
-        self.iter = 0
-        self.policy_array = tf.TensorArray(dtype=tf.float32,size=0,dynamic_size=True)
         self.max_iter = max_iter
         
         self.lstm_agent = lstm_agent(seed)
@@ -63,7 +61,7 @@ class policy_gradients:
         self.train_step = self.optimizer.apply_gradients([(self.accum_vars[i], gv[1]) for i, gv in enumerate(self.gvs)])
   
         self.init_g = tf.global_variables_initializer()
-        self.init_l = tf.local_variables_initializer()
+        #self.init_l = tf.local_variables_initializer()
         
     def init_weights(self,shape,var_name):
         """
