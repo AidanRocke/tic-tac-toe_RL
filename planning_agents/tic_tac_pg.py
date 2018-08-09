@@ -95,8 +95,10 @@ class policy_gradients:
             
             policies = policy_array_.stack()
             
-        return policies[-1]
-    
+            average_policy = tf.reduce_mean(policies,axis=0)
+            
+        return average_policy
+        
     def log_prob(self):
         
         return tf.log(self.policy)
