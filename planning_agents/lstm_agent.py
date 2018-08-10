@@ -17,8 +17,11 @@ class lstm_agent:
                         
         self.X_t = tf.placeholder(tf.float32, [1,5,5,1]) 
         
-        self.H_prev = tf.Variable(initial_value = tf.zeros(shape=[1,5,5,5]),dtype=tf.float32)
-        self.C_prev = tf.Variable(initial_value = tf.zeros(shape=[1,5,5,5]),dtype=tf.float32)
+        self.H_prev = tf.Variable(initial_value = tf.zeros(shape=[1,5,5,5]),
+                                  dtype=tf.float32,name='H_prev',trainable=False)
+
+        self.C_prev = tf.Variable(initial_value = tf.zeros(shape=[1,5,5,5]),
+                                  dtype=tf.float32,name='C_prev',trainable=False)
         
         self.input_ = self.input_gate()
         self.forget_ = self.forget_gate()
