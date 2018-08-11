@@ -37,7 +37,7 @@ class policy_gradients:
         
         
         ## define what is necessary for the loss:
-        self.reinforce_loss = self.reinforce_loss()
+        self.reinforce_loss = tf.reduce_mean(self.reinforce_loss())
         self.value_estimate = self.value_estimator()
         self.baseline = self.baseline() 
                 
