@@ -149,4 +149,6 @@ class tic_tac_system:
                 
                     
         sess.run(self.model.train_step)
+        
+        return sess.run(self.model.variance,feed_dict = train_feed)
     

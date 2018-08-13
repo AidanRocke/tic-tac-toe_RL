@@ -23,12 +23,11 @@ def simulator(tic_tac):
         
         for i in range(tic_tac.epochs-1):
             
-            tic_tac.batch_update(sess) 
+            state_variability = tic_tac.batch_update(sess) 
             
-            if i % 100 == 0:
+            if i % 10 == 0:
                 
-                print(i)
-
+                print(state_variability)
                 #print(np.mean((tic_tac.score[i*100:(i+1)*100]+5.0)/10))
             
     scores = tic_tac.score         
